@@ -1,0 +1,603 @@
+# Sitecore Experience Edge API Documentation
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Delivery API](#delivery-api)
+- [Schema](#schema)
+- [Query Capabilities](#query-capabilities)
+- [Query Examples](#query-examples)
+- [Media Handling](#media-handling)
+- [Best Practices](#best-practices)
+
+## Overview
+
+Sitecore Experience Edge provides a read-only GraphQL API designed to accommodate common front-end use cases for headless Sitecore development. It exposes limited information about Sitecore items with a focus on performance and high availability.
+
+## Delivery API
+
+The Delivery API is a GraphQL API that provides access to your approved and published content, optimized for performance and high availability. Use this API for all production-related actions.
+
+### Base Configuration
+
+| Component       | URL                                             |
+| --------------- | ----------------------------------------------- |
+| **Base URL**    | `https://edge.sitecorecloud.io/api/graphql`     |
+| **IDE**         | `https://edge.sitecorecloud.io/api/graphql/ide` |
+| **Endpoint**    | `https://edge.sitecorecloud.io/api/graphql/v1`  |
+| **HTTP Method** | `POST`                                          |
+
+### Authentication
+
+All requests to the Delivery API require authentication via API key:
+
+| Header Name | Format        | Purpose                                     |
+| ----------- | ------------- | ------------------------------------------- |
+| `sc_apikey` | API key token | API key token generated using the Token API |
+
+### Request/Response Format
+
+- **Request Body**: GraphQL query
+- **Response Format**: GraphQL-formatted response
+
+## Schema
+
+### Entry Points
+
+The Experience Edge schema provides four main query entry points:
+
+1. **`item`** - Query an item by path or ID
+2. **`layout`** - Query an item by site and route path (typically for Layout Service JSON)
+3. **`search`** - Construct Boolean field search queries
+4. **`site`** - Query content sites for site information
+
+### Template Projection
+
+- Types in the schema reflect template definitions from the Sitecore instance
+- Use inline fragments to select fields from specific types
+- When naming collisions occur, items with the newest creation date have `_{guid}` appended
+
+#### Supported Template Paths
+
+GraphQL types are generated for templates under these paths:
+
+- `/sitecore/templates/Foundation`
+- `/sitecore/templates/Feature`
+- `/sitecore/templates/Project`
+- `/sitecore/templates/User Defined`
+
+### Pagination
+
+Experience Edge uses cursor-based pagination for queries:
+
+#### Query Arguments
+
+- `first` - Number of results to return (default: 10)
+- `after` - Beginning cursor for next page
+
+#### Query Results
+
+- `pageInfo.hasNext` - Whether more results exist
+- `pageInfo.endCursor` - Cursor for next page (use in `after` argument)
+- `total` - Total number of available results
+
+### Query Complexity
+
+Query complexity is scored based on resource intensity. To manage complex queries:
+
+1. **Break into smaller queries** - Split large queries into multiple requests
+2. **Remove unnecessary fields** - Minimize requested fields
+3. **Configure complexity** (preview endpoint only):
+   ```xml
+   <complexityConfiguration>
+     <maxDepth>15</maxDepth>
+     <maxComplexity>10000</maxComplexity>
+     <fieldImpact>2</fieldImpact>
+   </complexityConfiguration>
+   ```
+
+## Query Capabilities
+
+### Available Search Fields
+
+Special fields available for content search:
+
+| Field        | Description                                    |
+| ------------ | ---------------------------------------------- |
+| `_templates` | All template GUIDs including base templates    |
+| `_path`      | Parent items path (for retrieving descendants) |
+| `_parent`    | ID of item's immediate parent                  |
+| `_name`      | Item name                                      |
+| `_language`  | Item language                                  |
+| `_hasLayout` | Whether item has presentation details          |
+
+### Search Operators
+
+#### Standard Operators
+
+- `EQ` - Equals
+- `NEQ` - Not equal
+- `CONTAINS` - Contains value
+- `NCONTAINS` - Doesn't contain value
+
+#### Range Operators (for numbers and dates)
+
+- `LT` - Less than
+- `LTE` - Less than or equals
+- `GT` - Greater than
+- `GTE` - Greater than or equals
+
+**Note**: Date values are stored in UTC format. Standard date/time formats and `yyyyMMddTHHmmssZ` are supported.
+
+## Query Examples
+
+### 1. Get Item by ID or Path
+
+```graphql
+query {
+  item(path: "/sitecore/content/Experience-Edge/home", language: "en") {
+    # Cast to template type
+    ... on AppRoute {
+      pageTitle {
+        value
+      }
+    }
+    # Cast field to type
+    field(name: "pageTitle") {
+      ... on TextField {
+        value
+      }
+    }
+  }
+}
+```
+
+### 2. Get Item Layout for URL
+
+```graphql
+query {
+  layout(site: "experienceedge", routePath: "/", language: "en") {
+    item {
+      rendered
+    }
+  }
+}
+```
+
+### 3. Search with Multiple Conditions
+
+```graphql
+query Search {
+  search(
+    where: {
+      AND: [
+        {
+          name: "_parent"
+          value: "110D559FDEA542EA9C1C8A5DF7E70EF9"
+          operator: EQ
+        }
+        { name: "title", value: "another", operator: CONTAINS }
+      ]
+    }
+  ) {
+    results {
+      id
+      name
+    }
+  }
+}
+```
+
+### 4. Get Items with Path Filtering
+
+```graphql
+query {
+  search(
+    where: {
+      AND: [
+        {
+          name: "_path"
+          value: "54C8E9B5-0B2C-5363-8FA6-D32A3A302F51"
+          operator: CONTAINS
+        }
+        {
+          AND: [
+            {
+              name: "_path"
+              value: "0C6F4AAF-DD7E-5FAF-B9B0-61070D496055"
+              operator: NCONTAINS
+            }
+            {
+              name: "_path"
+              value: "AB99BA2B-B606-51E3-BAD9-FD8358DE1333"
+              operator: NCONTAINS
+            }
+          ]
+        }
+      ]
+    }
+    first: 10
+  ) {
+    total
+    pageInfo {
+      endCursor
+      hasNext
+    }
+    results {
+      url {
+        path
+      }
+    }
+  }
+}
+```
+
+### 5. Paginate Bucket Items
+
+```graphql
+fragment bucketItemFields on Item {
+  ... on AppRoute {
+    pageTitle {
+      value
+    }
+  }
+  url {
+    path
+  }
+}
+
+query {
+  search(
+    where: {
+      AND: [
+        {
+          name: "_templates"
+          value: "0929f436c3f3500a9f8bd1c57a67a192"
+          operator: CONTAINS
+        }
+        {
+          name: "_path"
+          value: "7ab00eca411249818420666fc9110faf"
+          operator: CONTAINS
+        }
+      ]
+    }
+    first: 5
+    orderBy: { name: "pageTitle", direction: ASC }
+  ) {
+    results {
+      ...bucketItemFields
+    }
+    pageInfo {
+      endCursor
+      hasNext
+    }
+    total
+  }
+}
+```
+
+### 6. Build Site Navigation
+
+```graphql
+fragment navigationFields on Item {
+  ... on AppRoute {
+    pageTitle {
+      value
+    }
+  }
+  url {
+    path
+  }
+}
+
+query {
+  layout(site: "experienceedge", routePath: "/", language: "en") {
+    item {
+      ...navigationFields
+      children(
+        hasLayout: true
+        includeTemplateIDs: "e34d8c4f7e6c560cbe24e4d1fcdb16d8"
+      ) {
+        results {
+          ...navigationFields
+          children(
+            hasLayout: true
+            includeTemplateIDs: "e34d8c4f7e6c560cbe24e4d1fcdb16d8"
+          ) {
+            results {
+              ...navigationFields
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### 7. Build Breadcrumb
+
+```graphql
+fragment breadcrumbFields on Item {
+  ... on AppRoute {
+    pageTitle {
+      value
+    }
+  }
+  url {
+    path
+  }
+}
+
+query {
+  item(path: "e2c5c62f42a95b17bc0e71bc9193db9a", language: "en") {
+    ...breadcrumbFields
+    ancestors(
+      hasLayout: true
+      includeTemplateIDs: "e34d8c4f7e6c560cbe24e4d1fcdb16d8"
+    ) {
+      ...breadcrumbFields
+    }
+  }
+}
+```
+
+### 8. Date Range Query
+
+```graphql
+query {
+  search(
+    where: {
+      AND: [
+        { name: "birthdate", operator: LT, value: "2024-01-01" }
+        { name: "birthdate", operator: GT, value: "1950-01-01" }
+      ]
+    }
+  ) {
+    results {
+      name
+      BirthDate: field(name: "birthdate") {
+        value
+      }
+    }
+  }
+}
+```
+
+### 9. Number Range Query
+
+```graphql
+query {
+  search(
+    where: {
+      AND: [
+        { name: "count", operator: LTE, value: "300.0" }
+        { name: "count", operator: GTE, value: "71" }
+      ]
+    }
+  ) {
+    results {
+      name
+      Count: field(name: "count") {
+        value
+      }
+    }
+  }
+}
+```
+
+### 10. Get Site Root Item
+
+```graphql
+query {
+  layout(site: "experienceedge", routePath: "/", language: "en") {
+    item {
+      homeItemPath: path
+      contentRoot: parent {
+        id
+        path
+      }
+    }
+  }
+}
+```
+
+### 11. Get All Site Routes
+
+```graphql
+query {
+  site {
+    siteInfo(site: "example") {
+      routes(language: "en") {
+        results {
+          route {
+            id
+          }
+          routePath
+        }
+        total
+        pageInfo {
+          endCursor
+          hasNext
+        }
+      }
+    }
+  }
+}
+```
+
+### 12. Get Site Information
+
+```graphql
+query {
+  site {
+    siteInfo(site: "example") {
+      name
+      rootPath
+      robots
+      sitemap
+      redirects {
+        redirectType
+        isQueryStringPreserved
+        target
+        pattern
+      }
+      errorHandling(language: "en") {
+        notFoundPage {
+          id
+          path
+        }
+        notFoundPagePath
+        serverErrorPage {
+          id
+          name
+          path
+        }
+        serverErrorPagePath
+      }
+    }
+  }
+}
+```
+
+### 13. Get All Sites
+
+```graphql
+query {
+  site {
+    allSiteInfo(pageSize: 100, pageNumber: 1) {
+      results {
+        name
+        rootPath
+      }
+      total
+    }
+  }
+}
+```
+
+### 14. Get Dictionary Entries
+
+```graphql
+query {
+  site {
+    siteInfo(site: "example") {
+      name
+      dictionary(language: "en", first: 2) {
+        total
+        pageInfo {
+          hasNext
+          endCursor
+        }
+        results {
+          key
+          value
+        }
+      }
+    }
+  }
+}
+```
+
+### 15. Use Fields with Headless SDKs
+
+```graphql
+query {
+  richTextFieldExample: item(
+    path: "d979794f76fd51829f3ece48d16dc36c"
+    language: "en"
+  ) {
+    displayName
+    ... on StyleguideFieldUsageRichText {
+      sample {
+        jsonValue
+      }
+    }
+  }
+  imageFieldExample: item(
+    path: "c05be0b464885343b5670145b6815d03"
+    language: "en"
+  ) {
+    displayName
+    ... on StyleguideFieldUsageImage {
+      sample1 {
+        jsonValue
+      }
+    }
+  }
+  linkFieldExample: item(
+    path: "d299e65e1f6c5ea3b71381c8e2f85baf"
+    language: "en"
+  ) {
+    displayName
+    ... on StyleguideFieldUsageLink {
+      externalLink {
+        jsonValue
+      }
+    }
+  }
+}
+```
+
+## Media Handling
+
+### Image Manipulation Parameters
+
+Experience Edge supports the following image manipulation query parameters:
+
+| Parameter | Description             |
+| --------- | ----------------------- |
+| `w`       | Image width             |
+| `h`       | Image height            |
+| `mw`      | Maximum width           |
+| `mh`      | Maximum height          |
+| `f`       | File format (see below) |
+
+### Supported File Formats
+
+- **`avif`** - AVIF format (falls back to WebP if unavailable)
+- **`webp`** - Google WebP format
+- **`jpeg`** - Interlaced progressive JPEG
+- **`baseline-jpeg`** - Baseline sequential JPEG
+- **`json`** - Returns image metadata instead of the image
+
+## Best Practices
+
+### 1. Query Optimization
+
+- Use fragments for reusable field selections
+- Request only necessary fields
+- Leverage pagination for large result sets
+- Consider query complexity limits
+
+### 2. Date and Number Handling
+
+- Dates are stored in UTC format
+- Use quoted values for range operators
+- Republish content after enabling range queries for the first time
+
+### 3. Navigation and Structure
+
+- Use `hasLayout` to filter navigable pages
+- Use `includeTemplateIDs` to filter by template
+- Leverage `ancestors` and `children` for hierarchy traversal
+
+### 4. Performance Considerations
+
+- Keep `first` argument reasonable (default: 10, typical max: 250)
+- Use cursor-based pagination for large datasets
+- Break complex queries into smaller requests
+- Cache responses when appropriate
+
+### 5. Error Handling
+
+- Query error pages using `errorHandling` field
+- Implement proper 404 and 500 error page handling
+- Use redirect rules for URL management
+
+### 6. Language Support
+
+- Always specify language in queries
+- Enable language fallback if needed
+- Consider multi-language navigation structures
