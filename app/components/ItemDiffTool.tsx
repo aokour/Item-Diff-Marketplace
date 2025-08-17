@@ -15,6 +15,7 @@ import {
   Flex,
   useToast,
   Skeleton,
+  Icon,
 } from "@chakra-ui/react";
 // ItemDiffTool - main component for comparing authoring vs published layouts
 import { usePageContext } from "../utils/hooks/usePageContext";
@@ -25,6 +26,8 @@ import {
 import { DiffViewer } from "./DiffViewer";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { ErrorDisplay } from "./ErrorDisplay";
+import { mdiMagnify } from "@mdi/js";
+import { mdiRefresh } from "@mdi/js";
 
 interface ItemDiffToolProps {
   client: ClientSDK;
@@ -262,13 +265,17 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
                     versions
                   </Text>
                 </VStack>
+
                 <Button
-                  size="md"
-                  colorScheme="blue"
-                  onClick={performComparison}
+                  variant="solid"
                   isLoading={isComparing}
                   loadingText="Comparing..."
-                  shadow="sm"
+                  onClick={performComparison}
+                  leftIcon={
+                    <Icon>
+                      <path d={mdiRefresh} />
+                    </Icon>
+                  }
                 >
                   Refresh
                 </Button>
@@ -305,9 +312,6 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
                       </Text>
                       <HStack spacing={6}>
                         <HStack spacing={3}>
-                          <Box as="span" fontSize="lg">
-                            {comparisonResult.preview.error ? "❌" : "✅"}
-                          </Box>
                           <VStack align="start" spacing={0}>
                             <Text variant="default">Preview Version</Text>
                             <Badge
@@ -324,9 +328,6 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
                           </VStack>
                         </HStack>
                         <HStack spacing={3}>
-                          <Box as="span" fontSize="lg">
-                            {comparisonResult.published.error ? "❌" : "✅"}
-                          </Box>
                           <VStack align="start" spacing={0}>
                             <Text variant="default">Published Version</Text>
                             <Badge
@@ -384,7 +385,12 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
               <VStack spacing={3} align="stretch">
                 <HStack spacing={4} justify="space-between">
                   <VStack align="start" spacing={0}>
-                    <Text variant="strong">🔍 Layout Differences</Text>
+                    <Text variant="strong">
+                      <Icon>
+                        <path d={mdiMagnify} />
+                      </Icon>
+                      Layout Differences
+                    </Text>
                     <Text variant="small">Side-by-side comparison view</Text>
                   </VStack>
                 </HStack>
