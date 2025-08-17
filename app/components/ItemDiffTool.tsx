@@ -44,19 +44,6 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
   const [isInitializing, setIsInitializing] = useState(true);
   const toast = useToast();
 
-  // Debug logging
-  useEffect(() => {
-    console.log("XMC_ITEM_DIFF - ItemDiffTool Page Context Debug:", {
-      pageContext,
-      isPageLoading,
-      pageError,
-      hasItemId: !!pageContext?.itemId,
-      itemId: pageContext?.itemId,
-      siteName: pageContext?.siteName,
-      routePath: pageContext?.routePath,
-    });
-  }, [pageContext, isPageLoading, pageError]);
-
   // Initialize the comparison service
   useEffect(() => {
     const initializeService = async () => {
@@ -65,40 +52,6 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
         const service = new LayoutComparisonService(client);
         await service.initialize();
         setComparisonService(service);
-
-        toast({
-          title: "Service Initialized",
-          description: service.isExperienceEdgeAvailable()
-            ? "Connected to both preview and published environments"
-            : "Connected to preview environment only",
-          status: service.isExperienceEdgeAvailable() ? "success" : "warning",
-          duration: 3000,
-          isClosable: true,
-          render: ({ title, description, status }) => (
-            <Box
-              p={4}
-              bg={status === "success" ? "green.50" : "orange.50"}
-              border="1px solid"
-              borderColor={status === "success" ? "green.200" : "orange.200"}
-              borderRadius="md"
-              shadow="sm"
-            >
-              <Text
-                variant="strong"
-                color={status === "success" ? "green.800" : "orange.800"}
-              >
-                {title}
-              </Text>
-              <Text
-                variant="default"
-                mt={1}
-                color={status === "success" ? "green.700" : "orange.700"}
-              >
-                {description}
-              </Text>
-            </Box>
-          ),
-        });
       } catch (error) {
         toast({
           title: "Initialization Failed",
@@ -138,17 +91,8 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
   // Perform comparison when page context changes
   const performComparison = useCallback(async () => {
     if (!comparisonService || !pageContext?.itemId) {
-      console.log(
-        "XMC_ITEM_DIFF - Skipping comparison: missing service or itemId"
-      );
       return;
     }
-
-    console.log("XMC_ITEM_DIFF - Starting comparison with params:", {
-      siteName: pageContext.siteName,
-      routePath: pageContext.routePath || "/",
-      language: pageContext.language || "en",
-    });
 
     setIsComparing(true);
     setComparisonResult(null);
@@ -160,7 +104,6 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
         pageContext.language || "en"
       );
 
-      console.log("XMC_ITEM_DIFF - Comparison result:", result);
       setComparisonResult(result);
 
       // Show status toast
@@ -168,29 +111,7 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
       const hasPublishedData = !result.published.error;
 
       if (hasPreviewData && hasPublishedData) {
-        toast({
-          title: "Comparison Complete",
-          description: "Successfully compared preview and published versions",
-          status: "success",
-          duration: 2000,
-          render: ({ title, description }) => (
-            <Box
-              p={4}
-              bg="green.50"
-              border="1px solid"
-              borderColor="green.200"
-              borderRadius="md"
-              shadow="sm"
-            >
-              <Text variant="strong" color="green.800">
-                {title}
-              </Text>
-              <Text variant="default" mt={1} color="green.700">
-                {description}
-              </Text>
-            </Box>
-          ),
-        });
+        console.log("Comparison Complete");
       } else if (hasPreviewData || hasPublishedData) {
         toast({
           title: "Partial Data Retrieved",
@@ -280,10 +201,6 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
       !isComparing &&
       !isInitializing
     ) {
-      console.log(
-        "XMC_ITEM_DIFF - Triggering auto-comparison for item:",
-        pageContext.itemId
-      );
       performComparison();
     }
   }, [pageContext?.itemId, !!comparisonService, isInitializing]);
@@ -457,12 +374,7 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
 
         {/* Diff Viewer */}
         {!isComparing && comparisonResult && (
-          <Card
-            shadow="md"
-            border="1px solid"
-            borderColor="gray.200"
-            h="auto"
-          >
+          <Card shadow="md" border="1px solid" borderColor="gray.200" h="auto">
             <CardHeader
               pb={3}
               bg="gray.50"

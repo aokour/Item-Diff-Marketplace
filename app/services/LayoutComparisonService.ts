@@ -55,15 +55,12 @@ export class LayoutComparisonService {
       
       // Extract only the sitecore.route object for comparison
       if (parsed.sitecore?.route) {
-        console.log("XMC_ITEM_DIFF - Extracting route data for comparison");
         return JSON.stringify(parsed.sitecore.route, null, 2);
       }
       
       // Fallback: if no sitecore.route found, return the whole object
-      console.warn("XMC_ITEM_DIFF - No sitecore.route found, returning full object");
       return JSON.stringify(parsed, null, 2);
     } catch (error) {
-      console.warn("XMC_ITEM_DIFF - Failed to normalize JSON:", error);
       return typeof input === 'string' ? input : JSON.stringify(input, null, 2);
     }
   }
@@ -83,17 +80,9 @@ export class LayoutComparisonService {
         this.experienceEdgeService = new ExperienceEdgeService(this.client, liveContextId);
         
         // Test the connection
-        const isConnected = await this.experienceEdgeService.testConnection();
-        if (!isConnected) {
-          console.warn("XMC_ITEM_DIFF - Experience Edge connection test failed");
-        } else {
-          console.log("XMC_ITEM_DIFF - Experience Edge connection test successful");
-        }
-      } else {
-        console.warn("XMC_ITEM_DIFF - No live context ID found in application context");
+        await this.experienceEdgeService.testConnection();
       }
     } catch (error) {
-      console.error("XMC_ITEM_DIFF - Failed to initialize LayoutComparisonService:", error);
       throw error;
     }
   }
@@ -115,8 +104,6 @@ export class LayoutComparisonService {
       // Get context IDs for API calls
       const liveContextId = this.getLiveContextId();
       const previewContextId = this.getPreviewContextId();
-      
-      console.log("XMC_ITEM_DIFF - Using context IDs:", { liveContextId, previewContextId });
 
       // Fetch both versions in parallel
       const [previewLayout, publishedLayout, itemInfo] = await Promise.allSettled([
@@ -129,38 +116,6 @@ export class LayoutComparisonService {
       if (previewLayout.status === "fulfilled") {
         const previewResult = previewLayout.value;
         
-        // Debug logging to understand the structure differences
-        if (previewResult.rendered) {
-          console.log("XMC_ITEM_DIFF - Preview rendered type:", typeof previewResult.rendered);
-          
-          // Handle both string and object cases
-          let previewParsed;
-          if (typeof previewResult.rendered === 'string') {
-            console.log("XMC_ITEM_DIFF - Raw Preview JSON (first 500 chars):", 
-              previewResult.rendered.substring(0, 500));
-            try {
-              previewParsed = JSON.parse(previewResult.rendered);
-            } catch (e) {
-              console.warn("XMC_ITEM_DIFF - Failed to parse preview JSON string");
-            }
-          } else {
-            console.log("XMC_ITEM_DIFF - Preview rendered is already an object:", previewResult.rendered);
-            previewParsed = previewResult.rendered;
-          }
-          
-          if (previewParsed) {
-            console.log("XMC_ITEM_DIFF - Preview JSON structure:", {
-              hasSitecore: !!previewParsed.sitecore,
-              hasContext: !!previewParsed.sitecore?.context,
-              hasRoute: !!previewParsed.sitecore?.route,
-              hasSite: !!previewParsed.sitecore?.site,
-              contextKeys: previewParsed.sitecore?.context ? Object.keys(previewParsed.sitecore.context) : [],
-              routeKeys: previewParsed.sitecore?.route ? Object.keys(previewParsed.sitecore.route) : [],
-              rootKeys: Object.keys(previewParsed),
-            });
-          }
-        }
-        
         result.preview = {
           ...previewResult,
           rendered: previewResult.rendered ? this.normalizeLayoutJson(previewResult.rendered) : undefined,
@@ -172,38 +127,6 @@ export class LayoutComparisonService {
       // Handle published layout result
       if (publishedLayout.status === "fulfilled") {
         const publishedResult = publishedLayout.value;
-        
-        // Debug logging to understand the structure differences
-        if (publishedResult.rendered) {
-          console.log("XMC_ITEM_DIFF - Published rendered type:", typeof publishedResult.rendered);
-          
-          // Handle both string and object cases
-          let publishedParsed;
-          if (typeof publishedResult.rendered === 'string') {
-            console.log("XMC_ITEM_DIFF - Raw Published JSON (first 500 chars):", 
-              publishedResult.rendered.substring(0, 500));
-            try {
-              publishedParsed = JSON.parse(publishedResult.rendered);
-            } catch (e) {
-              console.warn("XMC_ITEM_DIFF - Failed to parse published JSON string");
-            }
-          } else {
-            console.log("XMC_ITEM_DIFF - Published rendered is already an object:", publishedResult.rendered);
-            publishedParsed = publishedResult.rendered;
-          }
-          
-          if (publishedParsed) {
-            console.log("XMC_ITEM_DIFF - Published JSON structure:", {
-              hasSitecore: !!publishedParsed.sitecore,
-              hasContext: !!publishedParsed.sitecore?.context,
-              hasRoute: !!publishedParsed.sitecore?.route,
-              hasSite: !!publishedParsed.sitecore?.site,
-              contextKeys: publishedParsed.sitecore?.context ? Object.keys(publishedParsed.sitecore.context) : [],
-              routeKeys: publishedParsed.sitecore?.route ? Object.keys(publishedParsed.sitecore.route) : [],
-              rootKeys: Object.keys(publishedParsed),
-            });
-          }
-        }
         
         result.published = {
           ...publishedResult,
@@ -224,7 +147,6 @@ export class LayoutComparisonService {
 
       return result;
     } catch (error) {
-      console.error("Error in compareLayouts:", error);
       return {
         preview: { error: "Comparison failed" },
         published: { error: "Comparison failed" },

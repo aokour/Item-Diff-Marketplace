@@ -15,8 +15,6 @@ export class ExperienceEdgeService {
    */
   async getPublishedLayout(siteName: string, routePath: string, language: string = "en"): Promise<LayoutData> {
     try {
-      console.log("XMC_ITEM_DIFF - Fetching published layout via XMC SDK:", { siteName, routePath, language });
-      
       const { data } = await this.client.mutate("xmc.live.graphql", {
         params: {
           query: {
@@ -41,11 +39,6 @@ export class ExperienceEdgeService {
         },
       });
 
-      console.log("XMC_ITEM_DIFF - Published layout response:", data);
-      console.log("XMC_ITEM_DIFF - Published data?.data:", data?.data);
-      console.log("XMC_ITEM_DIFF - Published layout:", data?.data?.layout);
-      console.log("XMC_ITEM_DIFF - Published item:", data?.data?.layout?.item);
-
       if (data?.data?.layout?.item?.rendered) {
         return {
           rendered: data.data.layout.item.rendered,
@@ -56,7 +49,6 @@ export class ExperienceEdgeService {
         error: "No layout data found in published environment",
       };
     } catch (error) {
-      console.error("XMC_ITEM_DIFF - Error fetching published layout:", error);
       return {
         error: error instanceof Error ? error.message : "Failed to fetch published layout",
       };
@@ -97,7 +89,6 @@ export class ExperienceEdgeService {
 
       return data?.data?.item || null;
     } catch (error) {
-      console.error("XMC_ITEM_DIFF - Error fetching published item:", error);
       return null;
     }
   }
@@ -128,7 +119,6 @@ export class ExperienceEdgeService {
 
       return true;
     } catch (error) {
-      console.error("XMC_ITEM_DIFF - Error testing Experience Edge connection:", error);
       return false;
     }
   }

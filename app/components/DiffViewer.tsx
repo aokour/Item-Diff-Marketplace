@@ -84,7 +84,6 @@ export function DiffViewer({ previewJson, publishedJson, height = "600px" }: Jso
         }
         return String(jsonData || '');
       } catch (error) {
-        console.warn('DiffViewer: Failed to format JSON', error);
         return String(jsonData || '');
       }
     };
@@ -93,7 +92,6 @@ export function DiffViewer({ previewJson, publishedJson, height = "600px" }: Jso
     const formattedPublished = formatJson(publishedJson);
 
     if (!formattedPreview || !formattedPublished) {
-      console.warn('JsonViewer: Invalid JSON data provided');
       setLoading(false);
       return;
     }
@@ -337,7 +335,6 @@ export function DiffViewer({ previewJson, publishedJson, height = "600px" }: Jso
         }
       };
     } catch (error) {
-      console.error("Error initializing JSON viewers:", error);
       setLoading(false);
     }
   }, [previewJson, publishedJson, isDark]);

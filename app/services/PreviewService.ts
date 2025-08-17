@@ -14,8 +14,6 @@ export class PreviewService {
    */
   async getPreviewLayout(siteName: string, routePath: string, language: string = "en", contextId?: string): Promise<LayoutData> {
     try {
-      console.log("XMC_ITEM_DIFF - Preview API call:", { siteName, routePath, language, contextId });
-      
       const { data } = await this.client.mutate("xmc.preview.graphql", {
         params: {
           query: {
@@ -40,11 +38,6 @@ export class PreviewService {
         },
       });
 
-      console.log("XMC_ITEM_DIFF - Preview API full response:", data);
-      console.log("XMC_ITEM_DIFF - Preview data.data:", data?.data);
-      console.log("XMC_ITEM_DIFF - Preview layout:", data?.data?.layout);
-      console.log("XMC_ITEM_DIFF - Preview item:", data?.data?.layout?.item);
-
       if (data?.data?.layout?.item?.rendered) {
         return {
           rendered: data.data.layout.item.rendered,
@@ -55,7 +48,6 @@ export class PreviewService {
         error: "No layout data found in preview environment",
       };
     } catch (error) {
-      console.error("XMC_ITEM_DIFF - Error fetching preview layout:", error);
       return {
         error: error instanceof Error ? error.message : "Failed to fetch preview layout",
       };
@@ -98,7 +90,6 @@ export class PreviewService {
 
       return data?.data?.layout?.item || null;
     } catch (error) {
-      console.error("XMC_ITEM_DIFF - Error fetching preview item info:", error);
       return null;
     }
   }
