@@ -260,11 +260,11 @@ export function DiffViewer({ previewJson, publishedJson, height = "600px" }: Jso
       
       const previewHeader = document.createElement('div');
       previewHeader.className = 'json-viewer-header';
-      previewHeader.textContent = '🔵 Preview Version';
+      previewHeader.innerHTML = '<img src="https://delivery-sitecore.sitecorecontenthub.cloud/api/public/content/mark-xm_cloud" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle; filter: grayscale(100%) brightness(1.2);" /> Preview Version';
       
       const publishedHeader = document.createElement('div');
       publishedHeader.className = 'json-viewer-header';
-      publishedHeader.textContent = '🟢 Published Version';
+      publishedHeader.innerHTML = '<img src="https://delivery-sitecore.sitecorecontenthub.cloud/api/public/content/mark-xm_cloud" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;" /> Published Version';
       
       headersContainer.appendChild(previewHeader);
       headersContainer.appendChild(publishedHeader);

@@ -322,8 +322,8 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
                               size="sm"
                             >
                               {comparisonResult.preview.error
-                                ? "Failed"
-                                : "Loaded"}
+                                ? "Not Found"
+                                : "Found"}
                             </Badge>
                           </VStack>
                         </HStack>
@@ -340,8 +340,8 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
                               size="sm"
                             >
                               {comparisonResult.published.error
-                                ? "Failed"
-                                : "Loaded"}
+                                ? "Not Found"
+                                : "Found"}
                             </Badge>
                           </VStack>
                         </HStack>
