@@ -1,6 +1,6 @@
 # Sitecore XM Cloud Item Layout Diff Tool
 
-![XMC Item Diff](screenshots/XMC%20Item%20Diff-1.png)
+![XMC Item Diff](screenshots/XMC%20Item%20Diff.png?t=1)
 
 A Sitecore Marketplace application that enables developers and content authors to compare layout JSON between authoring and published versions of items in XM Cloud Pages.
 
