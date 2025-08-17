@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="64" fill="#ffffff" stroke="#e9ecef" stroke-width="8"/>
+
+  <!-- Left panel (authoring - blue) -->
+  <rect x="64" y="96" width="176" height="320" rx="16" fill="#e3f2fd" stroke="#2196f3" stroke-width="8"/>
+
+  <!-- Right panel (published - green) -->
+  <rect x="272" y="96" width="176" height="320" rx="16" fill="#e8f5e8" stroke="#4caf50" stroke-width="8"/>
+
+  <!-- Code lines in left panel -->
+  <line x1="88" y1="144" x2="200" y2="144" stroke="#2196f3" stroke-width="12" stroke-linecap="round"/>
+  <line x1="88" y1="176" x2="184" y2="176" stroke="#2196f3" stroke-width="12" stroke-linecap="round"/>
+  <line x1="88" y1="208" x2="216" y2="208" stroke="#ff5722" stroke-width="12" stroke-linecap="round"/>
+  <line x1="88" y1="240" x2="192" y2="240" stroke="#2196f3" stroke-width="12" stroke-linecap="round"/>
+  <line x1="88" y1="304" x2="208" y2="304" stroke="#2196f3" stroke-width="12" stroke-linecap="round"/>
+  <line x1="88" y1="336" x2="184" y2="336" stroke="#2196f3" stroke-width="12" stroke-linecap="round"/>
+  <line x1="88" y1="368" x2="200" y2="368" stroke="#2196f3" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Code lines in right panel -->
+  <line x1="296" y1="144" x2="408" y2="144" stroke="#4caf50" stroke-width="12" stroke-linecap="round"/>
+  <line x1="296" y1="176" x2="392" y2="176" stroke="#4caf50" stroke-width="12" stroke-linecap="round"/>
+  <line x1="296" y1="208" x2="424" y2="208" stroke="#4caf50" stroke-width="12" stroke-linecap="round"/>
+  <line x1="296" y1="240" x2="400" y2="240" stroke="#4caf50" stroke-width="12" stroke-linecap="round"/>
+  <line x1="296" y1="272" x2="416" y2="272" stroke="#2e7d32" stroke-width="12" stroke-linecap="round"/>
+  <line x1="296" y1="304" x2="416" y2="304" stroke="#4caf50" stroke-width="12" stroke-linecap="round"/>
+  <line x1="296" y1="336" x2="392" y2="336" stroke="#4caf50" stroke-width="12" stroke-linecap="round"/>
+  <line x1="296" y1="368" x2="408" y2="368" stroke="#4caf50" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Diff indicators -->
+  <circle cx="48" cy="208" r="16" fill="#ff5722"/>
+  <line x1="40" y1="208" x2="56" y2="208" stroke="white" stroke-width="8" stroke-linecap="round"/>
+
+  <circle cx="464" cy="272" r="16" fill="#2e7d32"/>
+  <line x1="456" y1="272" x2="472" y2="272" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  <line x1="464" y1="264" x2="464" y2="280" stroke="white" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- Central divider -->
+  <line x1="256" y1="128" x2="256" y2="384" stroke="#6c757d" stroke-width="4" stroke-dasharray="8,8"/>
+</svg>

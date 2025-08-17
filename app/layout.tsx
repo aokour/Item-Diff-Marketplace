@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Providers } from "./providers";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
-
 export const metadata: Metadata = {
-  title: "Item Diff Marketplace",
-  description: "A marketplace for comparing and trading items",
+  title: "Sitecore Item Diff Tool",
+  description: "Compare authoring vs published content layouts in Sitecore XM Cloud",
 };
 
 export default function RootLayout({
@@ -16,7 +14,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body>
+        <Providers>
+          {children}
+        </Providers>
+      </body>
     </html>
   );
 }

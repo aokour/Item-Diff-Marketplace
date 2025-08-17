@@ -1,0 +1,27 @@
+{
+  "name": "Item Layout Diff Tool",
+  "id": "item-layout-diff-tool",
+  "version": "1.0.0",
+  "description": "Compare authoring and published versions of item layouts in Sitecore XM Cloud",
+  "author": "Sitecore Developer",
+  "extensionPoints": ["xmc:pages:contextpanel"],
+  "permissions": [
+    "xmc:authoring:read",
+    "xmc:preview:read",
+    "xmc:live:read"
+  ],
+  "configuration": {
+    "entryPoint": "/",
+    "width": 800,
+    "height": 600,
+    "resizable": true
+  },
+  "resources": {
+    "icon": "/icon.png",
+    "screenshots": ["/screenshot1.png"]
+  },
+  "dependencies": {
+    "@sitecore-marketplace-sdk/client": "^0.2.0",
+    "@sitecore-marketplace-sdk/xmc": "^0.2.0"
+  }
+}

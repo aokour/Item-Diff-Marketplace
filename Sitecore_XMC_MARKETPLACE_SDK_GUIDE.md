@@ -973,16 +973,73 @@ const config = {
 const client = await ClientSDK.init(config);
 ```
 
+### Context IDs - Critical for GraphQL Operations
+
+**IMPORTANT**: All XMC GraphQL operations require a `sitecoreContextId` to be passed in the `params.query` object. Failing to include this will result in "No sitecore context" errors.
+
+#### Understanding Context Types
+
+- **Preview Context ID**: Used for authoring and preview GraphQL queries (`xmc.authoring.graphql`, `xmc.preview.graphql`)
+- **Live Context ID**: Used for published content queries (`xmc.live.graphql`)
+
+#### Getting Context IDs
+
+Context IDs are available from the application context:
+
+```typescript
+// Get application context to extract context IDs
+const { data: appContext } = await client.query("application.context");
+
+// Extract context IDs from resource access
+const resourceAccess = appContext.resourceAccess[0]; // First resource
+const liveContextId = resourceAccess.context.live;
+const previewContextId = resourceAccess.context.preview;
+
+console.log("Live Context ID:", liveContextId);
+console.log("Preview Context ID:", previewContextId);
+```
+
+#### Correct Usage Pattern
+
+```typescript
+// ✅ CORRECT: Include sitecoreContextId in params.query
+const { data } = await client.mutate("xmc.authoring.graphql", {
+  params: {
+    query: {
+      sitecoreContextId: previewContextId, // Required!
+    },
+    body: {
+      query: `query { item(path: "/sitecore/content/Home") { id name } }`,
+    },
+  },
+});
+
+// ❌ INCORRECT: Missing sitecoreContextId will cause errors
+const { data } = await client.mutate("xmc.authoring.graphql", {
+  params: {
+    body: {
+      query: `query { item(path: "/sitecore/content/Home") { id name } }`,
+    },
+  },
+}); // Will fail with "No sitecore context" error
+```
+
 ### Content Management APIs
 
 #### Authoring and Management GraphQL API
 
 Execute GraphQL queries and mutations against the Sitecore Authoring API:
 
+**IMPORTANT**: All GraphQL operations require a `sitecoreContextId` in the `params.query` object. Use the **preview context ID** for authoring or preview queries and the **live context ID** for published content queries.
+
 ```typescript
 // Authoring API - supports both queries and mutations
+// REQUIRES: sitecoreContextId in params.query (use preview context for authoring)
 const { data } = await client.mutate("xmc.authoring.graphql", {
   params: {
+    query: {
+      sitecoreContextId: "preview-context-id", // Required for authoring queries
+    },
     body: {
       query: `
         query GetItems($path: String!) {
@@ -1004,9 +1061,12 @@ const { data } = await client.mutate("xmc.authoring.graphql", {
   },
 });
 
-// Mutation example
+// Mutation example with context ID
 const updateResult = await client.mutate("xmc.authoring.graphql", {
   params: {
+    query: {
+      sitecoreContextId: "preview-context-id", // Required for authoring mutations
+    },
     body: {
       query: `
         mutation UpdateItem($path: String!, $fields: [FieldValueInput!]!) {
@@ -1033,8 +1093,12 @@ Query published content from Preview and Live environments:
 
 ```typescript
 // Preview API - query draft/preview content
+// REQUIRES: sitecoreContextId in params.query (use preview context)
 const previewData = await client.mutate("xmc.preview.graphql", {
   params: {
+    query: {
+      sitecoreContextId: "preview-context-id", // Required for preview queries
+    },
     body: {
       query: `
         query GetPreviewContent {
@@ -1053,8 +1117,12 @@ const previewData = await client.mutate("xmc.preview.graphql", {
 });
 
 // Live API - query published content
+// REQUIRES: sitecoreContextId in params.query (use live context)
 const liveData = await client.mutate("xmc.live.graphql", {
   params: {
+    query: {
+      sitecoreContextId: "live-context-id", // Required for live queries
+    },
     body: {
       query: `
         query GetLiveContent($siteName: String!) {
@@ -2102,6 +2170,50 @@ if (error) {
 - Check TypeScript configuration
 - Use proper type assertions
 
+#### 5. GraphQL Context Errors
+
+**Problem**: "No sitecore context" errors in GraphQL responses
+**Cause**: Missing `sitecoreContextId` in GraphQL requests
+
+**Solutions**:
+
+```typescript
+// ✅ Always include sitecoreContextId in params.query
+const { data } = await client.mutate("xmc.authoring.graphql", {
+  params: {
+    query: {
+      sitecoreContextId: contextId, // Essential!
+    },
+    body: {
+      query: `...your GraphQL query...`,
+    },
+  },
+});
+
+// Get context IDs from application context
+const getContextIds = async () => {
+  const { data: appContext } = await client.query("application.context");
+  const resource = appContext.resourceAccess[0];
+
+  return {
+    liveContextId: resource.context.live,
+    previewContextId: resource.context.preview,
+  };
+};
+
+// Use correct context ID for each API:
+// - xmc.authoring.graphql → previewContextId
+// - xmc.preview.graphql → previewContextId
+// - xmc.live.graphql → liveContextId
+```
+
+**Debug Tips**:
+
+- Verify application context contains `resourceAccess` array
+- Check that context IDs are valid UUIDs
+- Ensure you're using the correct context type for each API
+- Add logging to confirm context IDs are being passed correctly
+
 ### Debug Mode
 
 ```typescript
@@ -2164,11 +2276,13 @@ client.query("application.context", {
 
 #### Content Management APIs
 
-| Key                     | Description               | Type     | Parameters       | Response Type     |
-| ----------------------- | ------------------------- | -------- | ---------------- | ----------------- |
-| `xmc.authoring.graphql` | Execute authoring GraphQL | Mutation | `GraphQLRequest` | `GraphQLResponse` |
-| `xmc.preview.graphql`   | Execute preview GraphQL   | Mutation | `GraphQLRequest` | `GraphQLResponse` |
-| `xmc.live.graphql`      | Execute live GraphQL      | Mutation | `GraphQLRequest` | `GraphQLResponse` |
+**Note**: All GraphQL operations require `sitecoreContextId` in `params.query`. Use preview context for authoring/preview, live context for published content.
+
+| Key                     | Description               | Type     | Parameters       | Response Type     | Context Required |
+| ----------------------- | ------------------------- | -------- | ---------------- | ----------------- | ---------------- |
+| `xmc.authoring.graphql` | Execute authoring GraphQL | Mutation | `GraphQLRequest` | `GraphQLResponse` | Preview Context  |
+| `xmc.preview.graphql`   | Execute preview GraphQL   | Mutation | `GraphQLRequest` | `GraphQLResponse` | Preview Context  |
+| `xmc.live.graphql`      | Execute live GraphQL      | Mutation | `GraphQLRequest` | `GraphQLResponse` | Live Context     |
 
 #### Content Transfer Operations
 
