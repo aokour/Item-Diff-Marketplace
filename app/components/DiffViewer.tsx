@@ -8,7 +8,11 @@ import { syntaxHighlighting, HighlightStyle } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 import { Box, useColorModeValue } from "@chakra-ui/react";
 import { SearchCursor, RegExpCursor } from "@codemirror/search";
-import * as Diff from "diff";
+import "./DiffViewer.css";
+
+// ============================================================================
+// Types and Interfaces
+// ============================================================================
 
 interface JsonViewerProps {
   previewJson: string | any;
@@ -26,6 +30,10 @@ export interface DiffViewerHandle {
   scrollToMatch: (editor: 'preview' | 'published', matchIndex: number) => void;
   getCurrentMatchIndex: (editor: 'preview' | 'published') => number;
 }
+
+// ============================================================================
+// CodeMirror Themes and Decorations
+// ============================================================================
 
 // Define custom syntax highlighting theme
 const jsonTheme = HighlightStyle.define([
@@ -80,6 +88,10 @@ const customEditorTheme = EditorView.theme({
     fontWeight: "bold !important",
   },
 });
+
+// ============================================================================
+// Main Component
+// ============================================================================
 
 export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(({ previewJson, publishedJson, height = "600px" }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -324,201 +336,6 @@ export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(({ previ
     ];
 
     try {
-      // Add global CSS for proper scrolling behavior
-      const styleId = "json-viewer-custom-styles";
-      if (!document.getElementById(styleId)) {
-        const styleEl = document.createElement("style");
-        styleEl.id = styleId;
-        styleEl.textContent = `
-          /* Custom scrollbar styles */
-          .json-viewer-container::-webkit-scrollbar,
-          .json-viewer-editor::-webkit-scrollbar,
-          .cm-scroller::-webkit-scrollbar {
-            width: 12px !important;
-            height: 12px !important;
-          }
-          
-          .json-viewer-container::-webkit-scrollbar-track,
-          .json-viewer-editor::-webkit-scrollbar-track,
-          .cm-scroller::-webkit-scrollbar-track {
-            background: #1a202c !important;
-            border-radius: 6px !important;
-          }
-          
-          .json-viewer-container::-webkit-scrollbar-thumb,
-          .json-viewer-editor::-webkit-scrollbar-thumb,
-          .cm-scroller::-webkit-scrollbar-thumb {
-            background: #4a5568 !important;
-            border-radius: 6px !important;
-            border: 2px solid #1a202c !important;
-          }
-          
-          .json-viewer-container::-webkit-scrollbar-thumb:hover,
-          .json-viewer-editor::-webkit-scrollbar-thumb:hover,
-          .cm-scroller::-webkit-scrollbar-thumb:hover {
-            background: #718096 !important;
-          }
-          
-          .json-viewer-container::-webkit-scrollbar-corner,
-          .json-viewer-editor::-webkit-scrollbar-corner,
-          .cm-scroller::-webkit-scrollbar-corner {
-            background: #1a202c !important;
-          }
-          
-          /* Base container styles */
-          .json-viewer-container {
-            height: 100% !important;
-            max-height: 600px !important;
-            overflow: auto !important;
-            position: relative !important;
-          }
-          
-          .json-viewer-wrapper {
-            height: 100% !important;
-            display: flex !important;
-            flex-direction: column !important;
-          }
-          
-          /* Headers */
-          .json-viewer-headers {
-            display: flex !important;
-            width: 100% !important;
-            position: sticky !important;
-            top: 0 !important;
-            z-index: 100 !important;
-            background: #22272e !important;
-            border-bottom: 1px solid rgba(120, 131, 146, 0.4) !important;
-            flex-shrink: 0 !important;
-          }
-          
-          .json-viewer-header {
-            flex: 1 1 50% !important;
-            width: 50% !important;
-            max-width: 50% !important;
-            padding: 12px 16px !important;
-            font-size: 14px !important;
-            font-weight: 600 !important;
-            color: #adbac7 !important;
-            background: #22272e !important;
-            border-right: 1px solid rgba(120, 131, 146, 0.4) !important;
-          }
-          
-          .json-viewer-header:last-child {
-            border-right: none !important;
-          }
-          
-          /* Side-by-side layout */
-          .json-viewer-editors {
-            display: flex !important;
-            width: 100% !important;
-            flex: 1 !important;
-            min-height: 0 !important;
-            box-sizing: border-box !important;
-          }
-          
-          .json-viewer-editor {
-            flex: 1 1 50% !important;
-            width: 50% !important;
-            max-width: 50% !important;
-            box-sizing: border-box !important;
-            overflow-x: auto !important;
-            overflow-y: hidden !important;
-          }
-          
-          /* Editor elements */
-          .json-viewer-editor .cm-editor {
-            height: 100% !important;
-            width: 100% !important;
-            overflow: hidden !important;
-            font-family: Monaco, Menlo, "Ubuntu Mono", Consolas, monospace !important;
-            font-size: 12px !important;
-          }
-          
-          .json-viewer-editor .cm-scroller {
-            overflow-x: auto !important;
-            overflow-y: hidden !important;
-            height: 100% !important;
-            scrollbar-width: thin !important;
-            scrollbar-color: #4a5568 #1a202c !important;
-          }
-          
-          .json-viewer-editor .cm-content {
-            width: max-content !important;
-            min-width: 100% !important;
-            height: auto !important;
-            padding: 0 10px !important;
-          }
-          
-          .json-viewer-editor .cm-line {
-            white-space: pre !important;
-            word-wrap: normal !important;
-            overflow-wrap: normal !important;
-          }
-          
-          .json-viewer-editor .cm-gutters {
-            position: sticky !important;
-            left: 0 !important;
-            height: auto !important;
-            border-right: 1px solid rgba(120, 131, 146, 0.4) !important;
-            background-color: #22272e !important;
-            color: #636e7b !important;
-            z-index: 10 !important;
-          }
-          
-          /* Simple diff highlighting */
-          .cm-diff-line {
-            background-color: rgba(46, 160, 67, 0.15) !important;
-            border-left: 3px solid #2ea043 !important;
-          }
-
-          /* Enhanced Search match highlighting */
-          .cm-searchMatch {
-            background-color: #FFEB3B !important;
-            border: 2px solid #FFC107 !important;
-            border-radius: 3px !important;
-            color: #000000 !important;
-            font-weight: bold !important;
-            text-shadow: none !important;
-            box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.3) !important;
-            outline: none !important;
-            position: relative !important;
-            z-index: 100 !important;
-          }
-          
-          .cm-searchMatch.cm-searchMatch-selected {
-            background-color: #FF5722 !important;
-            border: 3px solid #D84315 !important;
-            border-radius: 3px !important;
-            color: white !important;
-            font-weight: bold !important;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
-            box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.4) !important;
-            outline: none !important;
-            position: relative !important;
-            z-index: 101 !important;
-          }
-          
-          /* Additional search match highlighting */
-          .json-viewer-editor .cm-searchMatch {
-            background-color: #FFEB3B !important;
-            border: 2px solid #FFC107 !important;
-            border-radius: 3px !important;
-            color: #000000 !important;
-            font-weight: bold !important;
-            position: relative !important;
-            z-index: 100 !important;
-          }
-          
-          .json-viewer-editor .cm-searchMatch.cm-searchMatch-selected {
-            background-color: #FF5722 !important;
-            border: 3px solid #D84315 !important;
-            color: white !important;
-            position: relative !important;
-            z-index: 101 !important;
-          }
-        `;
-        document.head.appendChild(styleEl);
-      }
 
       // Create container structure with wrapper
       const wrapper = document.createElement('div');
@@ -861,7 +678,7 @@ export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(({ previ
       return searchState.current[searchKey].total;
     },
     
-    scrollToMatch: (editor: 'preview' | 'published', matchIndex: number) => {
+    scrollToMatch: (_editor: 'preview' | 'published', _matchIndex: number) => {
       // Implementation for scrolling to specific match
       return;
     },
