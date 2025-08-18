@@ -8,6 +8,7 @@ import { syntaxHighlighting, HighlightStyle } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 import { Box, useColorModeValue } from "@chakra-ui/react";
 import { SearchCursor, RegExpCursor } from "@codemirror/search";
+import * as Diff from "diff";
 
 interface JsonViewerProps {
   previewJson: string | any;
@@ -40,6 +41,9 @@ const jsonTheme = HighlightStyle.define([
 // Search decorations and theme
 const searchDecoration = Decoration.mark({ class: 'cm-search-highlight' });
 const searchTargetDecoration = Decoration.mark({ class: 'cm-search-highlight-target' });
+
+// Simple diff decorations
+const diffLineDecoration = Decoration.line({ class: 'cm-diff-line' });
 
 // Custom theme for side-by-side editors with search highlighting
 const customEditorTheme = EditorView.theme({
@@ -209,6 +213,47 @@ export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(({ previ
     );
   };
 
+  // Simple function to compute different lines
+  const computeDiffLines = (text1: string, text2: string): Set<number> => {
+    const lines1 = text1.split('\n');
+    const lines2 = text2.split('\n');
+    const diffLines = new Set<number>();
+    
+    const maxLines = Math.max(lines1.length, lines2.length);
+    
+    for (let i = 0; i < maxLines; i++) {
+      const line1 = lines1[i] || '';
+      const line2 = lines2[i] || '';
+      
+      if (line1 !== line2) {
+        diffLines.add(i);
+      }
+    }
+    
+    return diffLines;
+  };
+
+  // Create simple diff extension
+  const createDiffExtension = (diffLines: Set<number>) => {
+    return ViewPlugin.define(
+      (view) => {
+        const decorationBuilder = new RangeSetBuilder<Decoration>();
+        
+        for (const lineNumber of diffLines) {
+          if (lineNumber < view.state.doc.lines) {
+            const line = view.state.doc.line(lineNumber + 1); // doc.line is 1-indexed
+            decorationBuilder.add(line.from, line.from, diffLineDecoration);
+          }
+        }
+        
+        return {
+          decorations: decorationBuilder.finish()
+        };
+      },
+      { decorations: (plugin) => plugin.decorations }
+    );
+  };
+
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -249,6 +294,10 @@ export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(({ previ
       return;
     }
 
+    // Compute different lines
+    const diffLines = computeDiffLines(formattedPreview, formattedPublished);
+    console.log('🔍 Different lines:', Array.from(diffLines).sort((a, b) => a - b));
+
     // Common extensions with search compartments
     const previewExtensions = [
       lineNumbers(),
@@ -259,6 +308,7 @@ export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(({ previ
       EditorView.editable.of(false),
       previewSearchCompartment.current.of([]),
       previewTargetCompartment.current.of([]),
+      createDiffExtension(diffLines),
     ];
     
     const publishedExtensions = [
@@ -270,6 +320,7 @@ export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(({ previ
       EditorView.editable.of(false),
       publishedSearchCompartment.current.of([]),
       publishedTargetCompartment.current.of([]),
+      createDiffExtension(diffLines),
     ];
 
     try {
@@ -414,6 +465,12 @@ export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(({ previ
             z-index: 10 !important;
           }
           
+          /* Simple diff highlighting */
+          .cm-diff-line {
+            background-color: rgba(46, 160, 67, 0.15) !important;
+            border-left: 3px solid #2ea043 !important;
+          }
+
           /* Enhanced Search match highlighting */
           .cm-searchMatch {
             background-color: #FFEB3B !important;
