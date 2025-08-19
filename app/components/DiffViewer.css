@@ -140,8 +140,8 @@
 
 /* Enhanced Search match highlighting */
 .cm-searchMatch {
-  background-color: #FFEB3B !important;
-  border: 2px solid #FFC107 !important;
+  background-color: #ffeb3b !important;
+  border: 2px solid #ffc107 !important;
   border-radius: 3px !important;
   color: #000000 !important;
   font-weight: bold !important;
@@ -153,12 +153,12 @@
 }
 
 .cm-searchMatch.cm-searchMatch-selected {
-  background-color: #FF5722 !important;
-  border: 3px solid #D84315 !important;
+  background-color: #ff5722 !important;
+  border: 3px solid #d84315 !important;
   border-radius: 3px !important;
   color: white !important;
   font-weight: bold !important;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
   box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.4) !important;
   outline: none !important;
   position: relative !important;
@@ -167,8 +167,8 @@
 
 /* Additional search match highlighting */
 .json-viewer-editor .cm-searchMatch {
-  background-color: #FFEB3B !important;
-  border: 2px solid #FFC107 !important;
+  background-color: #ffeb3b !important;
+  border: 2px solid #ffc107 !important;
   border-radius: 3px !important;
   color: #000000 !important;
   font-weight: bold !important;
@@ -177,8 +177,8 @@
 }
 
 .json-viewer-editor .cm-searchMatch.cm-searchMatch-selected {
-  background-color: #FF5722 !important;
-  border: 3px solid #D84315 !important;
+  background-color: #ff5722 !important;
+  border: 3px solid #d84315 !important;
   color: white !important;
   position: relative !important;
   z-index: 101 !important;

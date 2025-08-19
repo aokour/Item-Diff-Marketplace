@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { Box } from "@chakra-ui/react";
 import { useMarketplaceClient } from "../utils/hooks/useMarketplaceClient";
@@ -14,7 +14,9 @@ function MarketplaceAppContent() {
   const { client, error, isInitialized, isLoading } = useMarketplaceClient();
 
   if (isLoading) {
-    return <LoadingSpinner message="Initializing Sitecore Marketplace client..." />;
+    return (
+      <LoadingSpinner message="Initializing Sitecore Marketplace client..." />
+    );
   }
 
   if (error) {

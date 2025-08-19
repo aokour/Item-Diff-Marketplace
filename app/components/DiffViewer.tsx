@@ -12,10 +12,18 @@ import { EditorView, lineNumbers } from "@codemirror/view";
 import { json } from "@codemirror/lang-json";
 import { syntaxHighlighting } from "@codemirror/language";
 import { Box, useColorModeValue } from "@chakra-ui/react";
-import { JsonViewerProps, DiffViewerHandle, SearchState } from "./types/DiffViewer.types";
+import {
+  JsonViewerProps,
+  DiffViewerHandle,
+  SearchState,
+} from "./types/DiffViewer.types";
 import { jsonTheme, customEditorTheme } from "./styles/DiffViewer.styles";
 import { computeDiffWithAlignment } from "./utils/diffAlgorithms";
-import { createSearchCursor, createSearchViewPlugin, createSearchTargetViewPlugin } from "./utils/searchUtils";
+import {
+  createSearchCursor,
+  createSearchViewPlugin,
+  createSearchTargetViewPlugin,
+} from "./utils/searchUtils";
 import { createDiffExtension, formatJson } from "./utils/editorUtils";
 import "./DiffViewer.css";
 
@@ -42,8 +50,6 @@ export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(
       published: { query: "", currentTarget: 0, total: 0 },
     });
 
-
-
     useEffect(() => {
       if (!containerRef.current) return;
 
@@ -60,10 +66,17 @@ export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(
       // Clear container
       containerRef.current.innerHTML = "";
 
-
       // Format JSON based on diff mode
-      const formattedPreview = diffMode ? formatJson(previewJson) : (typeof previewJson === "string" ? previewJson : JSON.stringify(previewJson, null, 2));
-      const formattedPublished = diffMode ? formatJson(publishedJson) : (typeof publishedJson === "string" ? publishedJson : JSON.stringify(publishedJson, null, 2));
+      const formattedPreview = diffMode
+        ? formatJson(previewJson)
+        : typeof previewJson === "string"
+          ? previewJson
+          : JSON.stringify(previewJson, null, 2);
+      const formattedPublished = diffMode
+        ? formatJson(publishedJson)
+        : typeof publishedJson === "string"
+          ? publishedJson
+          : JSON.stringify(publishedJson, null, 2);
 
       if (!formattedPreview || !formattedPublished) {
         setLoading(false);
@@ -71,12 +84,14 @@ export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(
       }
 
       // Compute aligned diff with gaps only in diff mode
-      const diffResult = diffMode ? computeDiffWithAlignment(formattedPreview, formattedPublished) : {
-        alignedText1: formattedPreview,
-        alignedText2: formattedPublished,
-        diffLines1: new Set<number>(),
-        diffLines2: new Set<number>()
-      };
+      const diffResult = diffMode
+        ? computeDiffWithAlignment(formattedPreview, formattedPublished)
+        : {
+            alignedText1: formattedPreview,
+            alignedText2: formattedPublished,
+            diffLines1: new Set<number>(),
+            diffLines2: new Set<number>(),
+          };
 
       try {
         // Create container structure with wrapper
@@ -88,13 +103,11 @@ export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(
 
         const previewHeader = document.createElement("div");
         previewHeader.className = "json-viewer-header";
-        previewHeader.innerHTML =
-          `<img src="https://delivery-sitecore.sitecorecontenthub.cloud/api/public/content/mark-xm_cloud" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle; filter: grayscale(100%) brightness(1.2);" /> Preview Version${diffMode ? '' : ' (Raw)'}`;
+        previewHeader.innerHTML = `<img src="https://delivery-sitecore.sitecorecontenthub.cloud/api/public/content/mark-xm_cloud" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle; filter: grayscale(100%) brightness(1.2);" /> Preview Version${diffMode ? "" : " (Raw)"}`;
 
         const publishedHeader = document.createElement("div");
         publishedHeader.className = "json-viewer-header";
-        publishedHeader.innerHTML =
-          `<img src="https://delivery-sitecore.sitecorecontenthub.cloud/api/public/content/mark-xm_cloud" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;" /> Published Version${diffMode ? '' : ' (Raw)'}`;
+        publishedHeader.innerHTML = `<img src="https://delivery-sitecore.sitecorecontenthub.cloud/api/public/content/mark-xm_cloud" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;" /> Published Version${diffMode ? "" : " (Raw)"}`;
 
         headersContainer.appendChild(previewHeader);
         headersContainer.appendChild(publishedHeader);
@@ -104,7 +117,8 @@ export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(
 
         const previewContainer = document.createElement("div");
         previewContainer.className = "json-viewer-editor";
-        previewContainer.style.borderRight = "1px solid rgba(120, 131, 146, 0.4)";
+        previewContainer.style.borderRight =
+          "1px solid rgba(120, 131, 146, 0.4)";
 
         const publishedContainer = document.createElement("div");
         publishedContainer.className = "json-viewer-editor";
@@ -242,7 +256,10 @@ export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(
 
             // Configure search highlighting
             const searchPlugin = createSearchViewPlugin(true, searchState);
-            const targetPlugin = createSearchTargetViewPlugin(true, searchState);
+            const targetPlugin = createSearchTargetViewPlugin(
+              true,
+              searchState
+            );
 
             view.dispatch({
               effects: [
@@ -326,7 +343,10 @@ export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(
 
             // Configure search highlighting
             const searchPlugin = createSearchViewPlugin(false, searchState);
-            const targetPlugin = createSearchTargetViewPlugin(false, searchState);
+            const targetPlugin = createSearchTargetViewPlugin(
+              false,
+              searchState
+            );
 
             view.dispatch({
               effects: [
@@ -406,7 +426,8 @@ export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(
 
                 // Update target highlighting
                 const targetPlugin = createSearchTargetViewPlugin(
-                  editor === "preview", searchState
+                  editor === "preview",
+                  searchState
                 );
                 const compartment =
                   editor === "preview"
@@ -467,7 +488,8 @@ export const DiffViewer = forwardRef<DiffViewerHandle, JsonViewerProps>(
 
                 // Update target highlighting
                 const targetPlugin = createSearchTargetViewPlugin(
-                  editor === "preview", searchState
+                  editor === "preview",
+                  searchState
                 );
                 const compartment =
                   editor === "preview"

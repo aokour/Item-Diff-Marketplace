@@ -49,11 +49,9 @@ export function ErrorDisplay({
             size="sm"
             onClick={() => setShowDetails(!showDetails)}
           >
-            <Text variant="small">
-              {showDetails ? "Hide" : "Show"} Details
-            </Text>
+            <Text variant="small">{showDetails ? "Hide" : "Show"} Details</Text>
           </Button>
-          
+
           <Collapse in={showDetails}>
             <Box
               p={3}

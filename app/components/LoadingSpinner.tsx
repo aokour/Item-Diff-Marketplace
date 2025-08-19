@@ -7,11 +7,11 @@ interface LoadingSpinnerProps {
   progressValue?: number;
 }
 
-export function LoadingSpinner({ 
-  message = "Loading...", 
+export function LoadingSpinner({
+  message = "Loading...",
   size = "lg",
   showProgress = false,
-  progressValue
+  progressValue,
 }: LoadingSpinnerProps) {
   return (
     <Box
@@ -24,10 +24,10 @@ export function LoadingSpinner({
       <VStack spacing={4} w="full" maxW="400px">
         {showProgress && progressValue !== undefined ? (
           <VStack spacing={3} w="full">
-            <Progress 
-              value={progressValue} 
-              size="md" 
-              colorScheme="blue" 
+            <Progress
+              value={progressValue}
+              size="md"
+              colorScheme="blue"
               w="full"
               hasStripe
               isAnimated

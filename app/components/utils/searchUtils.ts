@@ -1,7 +1,10 @@
 import { EditorState, RangeSetBuilder } from "@codemirror/state";
 import { EditorView, ViewPlugin, Decoration } from "@codemirror/view";
 import { SearchCursor, RegExpCursor } from "@codemirror/search";
-import { searchDecoration, searchTargetDecoration } from "../styles/DiffViewer.styles";
+import {
+  searchDecoration,
+  searchTargetDecoration,
+} from "../styles/DiffViewer.styles";
 import { SearchState } from "../types/DiffViewer.types";
 
 // Search cursor factory function from the article
@@ -17,15 +20,16 @@ export const createSearchCursor = (
     const options = { ignoreCase: !caseSensitive };
     return new RegExpCursor(text, query, options, from, to);
   } else {
-    const filter = caseSensitive
-      ? undefined
-      : (x: string) => x.toLowerCase();
+    const filter = caseSensitive ? undefined : (x: string) => x.toLowerCase();
     return new SearchCursor(text, query, from, to, filter);
   }
 };
 
 // Create search highlighting ViewPlugin based on the article
-export const createSearchViewPlugin = (isPreview: boolean, searchState: React.MutableRefObject<SearchState>) => {
+export const createSearchViewPlugin = (
+  isPreview: boolean,
+  searchState: React.MutableRefObject<SearchState>
+) => {
   return ViewPlugin.define(
     (view) => {
       const plugin = {
@@ -75,7 +79,10 @@ export const createSearchViewPlugin = (isPreview: boolean, searchState: React.Mu
 };
 
 // Create search target ViewPlugin for current match highlighting
-export const createSearchTargetViewPlugin = (isPreview: boolean, searchState: React.MutableRefObject<SearchState>) => {
+export const createSearchTargetViewPlugin = (
+  isPreview: boolean,
+  searchState: React.MutableRefObject<SearchState>
+) => {
   return ViewPlugin.define(
     (view) => {
       const plugin = {
