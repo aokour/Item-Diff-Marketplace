@@ -19,8 +19,9 @@ export const searchTargetDecoration = Decoration.mark({
   class: "cm-search-highlight-target",
 });
 
-// Simple diff decorations
-export const diffLineDecoration = Decoration.line({ class: "cm-diff-line" });
+// Diff line decorations
+export const diffLineAddedDecoration = Decoration.line({ class: "cm-diff-line-added" });
+export const diffLineRemovedDecoration = Decoration.line({ class: "cm-diff-line-removed" });
 
 // Custom theme for side-by-side editors with search highlighting
 export const customEditorTheme = EditorView.theme({

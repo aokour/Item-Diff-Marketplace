@@ -1,123 +1,115 @@
 import { DiffResult } from "../types/DiffViewer.types";
 
-// Safe alignment algorithm with proper gap handling
-export const computeDiffWithAlignment = (text1: string, text2: string): DiffResult => {
+// Legacy compatibility functions - no longer used with native CodeMirror MergeView
+// Kept for potential fallback scenarios or compatibility during migration
+
+// Structured diff algorithm optimized for JSON comparison with proper alignment
+export const computeSimpleDiff = (text1: string, text2: string): DiffResult => {
   const lines1 = text1.split("\n");
   const lines2 = text2.split("\n");
+  
+  return computeStructuredDiff(lines1, lines2);
+};
 
-  console.log("🔍 Input lengths:", lines1.length, lines2.length);
-
-  // Safety check for very large inputs
-  if (lines1.length > 10000 || lines2.length > 10000) {
-    console.error("Input too large, using simple diff");
-    return computeSimpleDiff(text1, text2);
-  }
-
-  // Create lookup sets for efficient checking
-  const lines1Set = new Set(lines1);
-  const lines2Set = new Set(lines2);
-
-  const alignedText1: string[] = [];
-  const alignedText2: string[] = [];
+// Structured diff algorithm that prioritizes semantic alignment over optimal matching
+function computeStructuredDiff(lines1: string[], lines2: string[]): DiffResult {
+  const m = lines1.length;
+  const n = lines2.length;
+  
+  // Use simple sliding window approach for better semantic matching
+  const alignedLines1: string[] = [];
+  const alignedLines2: string[] = [];
   const diffLines1 = new Set<number>();
   const diffLines2 = new Set<number>();
-
-  let i1 = 0, i2 = 0;
+  
+  let i = 0, j = 0;
   let alignedIndex = 0;
-  let iterations = 0;
-  const MAX_ITERATIONS = Math.max(lines1.length, lines2.length) * 2; // Safety limit
-
-  while ((i1 < lines1.length || i2 < lines2.length) && iterations < MAX_ITERATIONS) {
-    iterations++;
-    
-    const line1 = i1 < lines1.length ? lines1[i1] : null;
-    const line2 = i2 < lines2.length ? lines2[i2] : null;
-
-    if (line1 && line2 && line1 === line2) {
-      // Lines match exactly - add both and advance
-      alignedText1.push(line1);
-      alignedText2.push(line2);
-      i1++;
-      i2++;
-    } else if (line1 && !line2) {
-      // Preview has more lines - add gap to published
-      alignedText1.push(line1);
-      alignedText2.push(""); // Gap
-      diffLines1.add(alignedIndex);
-      i1++;
-    } else if (!line1 && line2) {
-      // Published has more lines - add gap to preview
-      alignedText1.push(""); // Gap
-      alignedText2.push(line2);
+  
+  while (i < m || j < n) {
+    if (i >= m) {
+      // Only lines left in document 2 - insert
+      alignedLines1.push('');
+      alignedLines2.push(lines2[j]);
       diffLines2.add(alignedIndex);
-      i2++;
-    } else if (line1 && line2) {
-      // Both lines exist but differ - try to find if line1 exists later in lines2
-      let foundInLines2 = false;
-      for (let j = i2 + 1; j < Math.min(i2 + 5, lines2.length); j++) {
-        if (lines2[j] === line1) {
-          // Found line1 later in lines2, so line2 is unique - add gap to preview
-          alignedText1.push(""); // Gap
-          alignedText2.push(line2);
-          diffLines2.add(alignedIndex);
-          i2++;
-          foundInLines2 = true;
+      j++;
+    } else if (j >= n) {
+      // Only lines left in document 1 - delete
+      alignedLines1.push(lines1[i]);
+      alignedLines2.push('');
+      diffLines1.add(alignedIndex);
+      i++;
+    } else if (lines1[i] === lines2[j]) {
+      // Lines match exactly
+      alignedLines1.push(lines1[i]);
+      alignedLines2.push(lines2[j]);
+      i++;
+      j++;
+    } else {
+      // Lines differ - look ahead to find the best alignment
+      let bestMatch = null;
+      let lookAhead = 5; // How far to look ahead
+      
+      // Look for line1[i] in upcoming lines2
+      for (let k = j + 1; k < Math.min(j + lookAhead, n); k++) {
+        if (lines1[i] === lines2[k]) {
+          bestMatch = {type: 'insert', distance: k - j};
           break;
         }
       }
       
-      if (!foundInLines2) {
-        // Try to find if line2 exists later in lines1
-        let foundInLines1 = false;
-        for (let j = i1 + 1; j < Math.min(i1 + 5, lines1.length); j++) {
-          if (lines1[j] === line2) {
-            // Found line2 later in lines1, so line1 is unique - add gap to published
-            alignedText1.push(line1);
-            alignedText2.push(""); // Gap
-            diffLines1.add(alignedIndex);
-            i1++;
-            foundInLines1 = true;
-            break;
+      // Look for line2[j] in upcoming lines1
+      for (let k = i + 1; k < Math.min(i + lookAhead, m); k++) {
+        if (lines2[j] === lines1[k]) {
+          const newMatch = {type: 'delete', distance: k - i};
+          if (!bestMatch || newMatch.distance < bestMatch.distance) {
+            bestMatch = newMatch;
           }
-        }
-        
-        if (!foundInLines1) {
-          // Lines are genuinely different
-          alignedText1.push(line1);
-          alignedText2.push(line2);
-          diffLines1.add(alignedIndex);
-          diffLines2.add(alignedIndex);
-          i1++;
-          i2++;
+          break;
         }
       }
-    } else {
-      // Shouldn't reach here, but safety break
-      break;
+      
+      if (bestMatch?.type === 'insert') {
+        // line1[i] matches with a later line2, so insert line2[j] as gap
+        alignedLines1.push('');
+        alignedLines2.push(lines2[j]);
+        diffLines2.add(alignedIndex);
+        j++;
+      } else if (bestMatch?.type === 'delete') {
+        // line2[j] matches with a later line1, so delete line1[i] as gap
+        alignedLines1.push(lines1[i]);
+        alignedLines2.push('');
+        diffLines1.add(alignedIndex);
+        i++;
+      } else {
+        // No good match found - treat as modification
+        alignedLines1.push(lines1[i]);
+        alignedLines2.push(lines2[j]);
+        diffLines1.add(alignedIndex);
+        diffLines2.add(alignedIndex);
+        i++;
+        j++;
+      }
     }
-
+    
     alignedIndex++;
   }
-
-  if (iterations >= MAX_ITERATIONS) {
-    console.warn("🔍 Hit iteration limit, using simple diff");
-    return computeSimpleDiff(text1, text2);
+  
+  // Optional: Log alignment stats in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`🔧 Aligned ${alignedLines1.length} lines (was ${m} vs ${n})`);
   }
-
-  console.log("🔍 Final aligned lengths:", alignedText1.length, alignedText2.length);
-  console.log("🔍 Diff lines preview:", Array.from(diffLines1).slice(0, 10));
-  console.log("🔍 Diff lines published:", Array.from(diffLines2).slice(0, 10));
-
+  
   return {
-    alignedText1: alignedText1.join("\n"),
-    alignedText2: alignedText2.join("\n"),
+    alignedText1: alignedLines1.join("\n"),
+    alignedText2: alignedLines2.join("\n"),
     diffLines1,
     diffLines2,
   };
-};
+}
 
-// Fallback simple diff for large inputs
-export const computeSimpleDiff = (text1: string, text2: string): DiffResult => {
+
+// Simple naive diff (for comparison)
+export const computeNaiveDiff = (text1: string, text2: string): DiffResult => {
   const lines1 = text1.split("\n");
   const lines2 = text2.split("\n");
   const diffLines1 = new Set<number>();
@@ -141,4 +133,10 @@ export const computeSimpleDiff = (text1: string, text2: string): DiffResult => {
     diffLines1,
     diffLines2,
   };
+};
+
+// Legacy function - replaced by native CodeMirror MergeView
+export const computeDiffWithAlignment = (text1: string, text2: string): DiffResult => {
+  console.warn("⚠️ computeDiffWithAlignment is deprecated - using native CodeMirror MergeView instead");
+  return computeSimpleDiff(text1, text2);
 };

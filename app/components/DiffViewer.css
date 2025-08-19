@@ -132,10 +132,24 @@
   z-index: 10 !important;
 }
 
-/* Simple diff highlighting */
-.cm-diff-line {
+
+/* Added lines (right side) */
+.cm-diff-line-added {
   background-color: rgba(46, 160, 67, 0.15) !important;
   border-left: 3px solid #2ea043 !important;
+}
+
+/* Removed lines (left side) */  
+.cm-diff-line-removed {
+  background-color: rgba(248, 81, 73, 0.15) !important;
+  border-left: 3px solid #f85149 !important;
+}
+
+/* Gap lines (empty alignment lines) */
+.cm-line:empty {
+  min-height: 1.5em !important;
+  background-color: rgba(120, 131, 146, 0.05) !important;
+  border-left: 3px solid transparent !important;
 }
 
 /* Enhanced Search match highlighting */

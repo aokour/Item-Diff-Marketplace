@@ -3,6 +3,9 @@ export interface JsonViewerProps {
   publishedJson: string | any;
   height?: string;
   diffMode?: boolean;
+  viewMode?: 'side-by-side' | 'unified';
+  diffAlgorithm?: 'native' | 'line-by-line' | 'hybrid';
+  lineAlgorithm?: 'lcs' | 'naive'; // LCS for proper alignment, naive for simple line-by-line
 }
 
 export interface DiffViewerHandle {
