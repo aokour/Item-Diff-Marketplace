@@ -28,6 +28,9 @@ import {
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
+  Switch,
+  FormControl,
+  FormLabel,
 } from "@chakra-ui/react";
 // ItemDiffTool - main component for comparing authoring vs published layouts
 import { usePageContext } from "../utils/hooks/usePageContext";
@@ -70,6 +73,7 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
     useState<ComparisonResult | null>(null);
   const [isComparing, setIsComparing] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [diffModeEnabled, setDiffModeEnabled] = useState(true);
   const toast = useToast();
 
   // Search state
@@ -642,9 +646,15 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
                       <Icon>
                         <path d={mdiMagnify} />
                       </Icon>
-                      Layout Differences
+                      {diffModeEnabled
+                        ? "Layout Differences"
+                        : "Layout Content"}
                     </Text>
-                    <Text variant="small">Side-by-side comparison view</Text>
+                    <Text variant="small">
+                      {diffModeEnabled
+                        ? "Side-by-side comparison view"
+                        : "Raw JSON content view"}
+                    </Text>
                   </VStack>
                 </HStack>
 
@@ -790,31 +800,48 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
                   )}
                 </HStack>
 
-                {searchState.query && searchState.totalMatches > 0 && (
-                  <HStack spacing={4} fontSize="xs" color="gray.600">
-                    <Text>
-                      Searching in:{" "}
-                      <Badge
-                        size="sm"
-                        colorScheme={
-                          searchState.searchMode === "preview"
-                            ? "blue"
-                            : "green"
-                        }
-                      >
-                        {searchState.searchMode === "preview"
-                          ? "Preview"
-                          : "Published"}{" "}
-                        version
-                      </Badge>
-                    </Text>
-                    <HStack spacing={1} color="gray.500">
-                      <Kbd fontSize="xs">Ctrl/Cmd</Kbd>
-                      <Text>+</Text>
-                      <Kbd fontSize="xs">F</Kbd>
+                {/* Diff Mode Toggle */}
+                <Flex justify="space-between" align="center">
+                  {searchState.query && searchState.totalMatches > 0 ? (
+                    <HStack spacing={4} fontSize="xs" color="gray.600">
+                      <Text>
+                        Searching in:{" "}
+                        <Badge
+                          size="sm"
+                          colorScheme={
+                            searchState.searchMode === "preview"
+                              ? "blue"
+                              : "green"
+                          }
+                        >
+                          {searchState.searchMode === "preview"
+                            ? "Preview"
+                            : "Published"}{" "}
+                          version
+                        </Badge>
+                      </Text>
+                      <HStack spacing={1} color="gray.500">
+                        <Kbd fontSize="xs">Ctrl/Cmd</Kbd>
+                        <Text>+</Text>
+                        <Kbd fontSize="xs">F</Kbd>
+                      </HStack>
                     </HStack>
-                  </HStack>
-                )}
+                  ) : (
+                    <Box />
+                  )}
+
+                  <FormControl display="flex" alignItems="center" w="auto">
+                    <FormLabel htmlFor="diff-mode" mb="0" fontSize="sm" mr={2}>
+                      Show Differences
+                    </FormLabel>
+                    <Switch
+                      id="diff-mode"
+                      isChecked={diffModeEnabled}
+                      onChange={(e) => setDiffModeEnabled(e.target.checked)}
+                      colorScheme="blue"
+                    />
+                  </FormControl>
+                </Flex>
               </VStack>
             </CardHeader>
             <CardBody pt={0} pb={4}>
@@ -825,6 +852,7 @@ export function ItemDiffTool({ client }: ItemDiffToolProps) {
                   previewJson={comparisonResult.preview.rendered}
                   publishedJson={comparisonResult.published.rendered}
                   height="auto"
+                  diffMode={diffModeEnabled}
                 />
               ) : (
                 <VStack spacing={4} py={8}>

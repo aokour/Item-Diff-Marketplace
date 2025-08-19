@@ -12,7 +12,7 @@
     "@chakra-ui/cli": "^2.5.8",
     "@chakra-ui/react": "^2.8.0",
     "@codemirror/lang-json": "^6.0.0",
-    "@codemirror/merge": "^6.0.0",
+    "@codemirror/merge": "^6.10.2",
     "@codemirror/search": "^6.5.11",
     "@codemirror/state": "^6.0.0",
     "@codemirror/theme-one-dark": "^6.0.0",
