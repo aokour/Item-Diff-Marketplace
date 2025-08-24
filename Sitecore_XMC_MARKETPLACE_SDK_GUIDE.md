@@ -86,8 +86,8 @@ npm i @material-design-icons/react
 1. **Configure your app.tsx file with Blok theme:**
 
 ```typescript
-import { ChakraProvider } from "@chakra-ui/react";
-import sitecoreTheme, { toastOptions } from "@sitecore/blok-theme";
+import { ChakraProvider } from '@chakra-ui/react';
+import sitecoreTheme, { toastOptions } from '@sitecore/blok-theme';
 
 function App() {
   return (
@@ -113,8 +113,8 @@ import {
   Text,
   VStack,
   useToast,
-} from "@chakra-ui/react";
-import { useMarketplaceClient } from "@/utils/hooks/useMarketplaceClient";
+} from '@chakra-ui/react';
+import { useMarketplaceClient } from '@/utils/hooks/useMarketplaceClient';
 
 function MarketplaceApp() {
   const { client, isInitialized } = useMarketplaceClient();
@@ -122,17 +122,17 @@ function MarketplaceApp() {
 
   const handleAction = async () => {
     try {
-      await client.mutate("pages.reloadCanvas");
+      await client.mutate('pages.reloadCanvas');
       toast({
-        title: "Success",
-        description: "Canvas reloaded successfully",
-        status: "success",
+        title: 'Success',
+        description: 'Canvas reloaded successfully',
+        status: 'success',
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to reload canvas",
-        status: "error",
+        title: 'Error',
+        description: 'Failed to reload canvas',
+        status: 'error',
       });
     }
   };
@@ -216,7 +216,7 @@ const components = {
 #### Loading States
 
 ```typescript
-import { Skeleton, SkeletonText, VStack } from "@chakra-ui/react";
+import { Skeleton, SkeletonText, VStack } from '@chakra-ui/react';
 
 function LoadingState() {
   return (
@@ -264,17 +264,7 @@ function useMarketplaceToast() {
 #### Data Display Components
 
 ```typescript
-import {
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Badge,
-  Avatar,
-  HStack,
-} from "@chakra-ui/react";
+import { Table, Thead, Tbody, Tr, Th, Td, Badge, Avatar, HStack } from '@chakra-ui/react';
 
 function SitesList({ sites }: { sites: Site[] }) {
   return (
@@ -297,8 +287,8 @@ function SitesList({ sites }: { sites: Site[] }) {
               </HStack>
             </Td>
             <Td>
-              <Badge colorScheme={site.isActive ? "green" : "gray"}>
-                {site.isActive ? "Active" : "Inactive"}
+              <Badge colorScheme={site.isActive ? 'green' : 'gray'}>
+                {site.isActive ? 'Active' : 'Inactive'}
               </Badge>
             </Td>
             <Td>{site.collection}</Td>
@@ -361,6 +351,8 @@ enum AllowedExtensionPoints {
 }
 ```
 
+**Note**: The `AllowedTouchpoints` enum is deprecated. Use `AllowedExtensionPoints` instead for all extension point definitions.
+
 ### Communication Flow
 
 1. **Secure Handshake**: Core SDK establishes secure communication with Sitecore host
@@ -391,6 +383,14 @@ enum AllowedExtensionPoints {
 - Origin validation
 - PostMessage API abstraction
 
+**Exported Classes and Functions**:
+
+- `CoreSDK` - Main SDK class for low-level communication
+- `CoreError` - Error handling with predefined error codes
+- `ErrorCode` - Enumeration of all SDK error codes
+- `AllowedExtensionPoints` - Valid extension points for embedding applications
+- Various TypeScript interfaces for configuration and messaging
+
 **Note**: Developers typically don't interact with this package directly.
 
 ### Client Package (`@sitecore-marketplace-sdk/client`)
@@ -402,6 +402,12 @@ enum AllowedExtensionPoints {
 - State management
 - Subscription handling
 - Error management
+
+**Exported Classes and Functions**:
+
+- `ClientSDK` - Main client SDK class with static `init()` method
+- `objectToJsonArrayBuffer()` - Utility function for converting objects to ArrayBuffer
+- Various TypeScript interfaces and types for queries, mutations, and configuration
 
 **Key Features**:
 
@@ -419,6 +425,13 @@ enum AllowedExtensionPoints {
 - XM Apps REST API
 - Experience Edge Token API
 - Experience Edge Admin API
+
+**Exported Modules and Functions**:
+
+- `XMC` - Main module for XM Cloud integration
+- Generated TypeScript types for all XM Cloud APIs
+- Augmentation modules for extending the base client SDK
+- Operation-specific client modules (authoring, content, content-transfer, xmapp)
 
 **When to Use**: When your app needs to interact with XM Cloud services.
 
@@ -567,9 +580,9 @@ export function useMarketplaceClient(
 
 ```typescript
 // src/pages/index.tsx
-import { useState, useEffect } from "react";
-import type { ApplicationContext } from "@sitecore-marketplace-sdk/client";
-import { useMarketplaceClient } from "@/utils/hooks/useMarketplaceClient";
+import { useState, useEffect } from 'react';
+import type { ApplicationContext } from '@sitecore-marketplace-sdk/client';
+import { useMarketplaceClient } from '@/utils/hooks/useMarketplaceClient';
 
 function App() {
   const { client, error, isInitialized } = useMarketplaceClient();
@@ -577,20 +590,20 @@ function App() {
 
   useEffect(() => {
     if (!error && isInitialized && client) {
-      console.log("Marketplace client initialized successfully.");
+      console.log('Marketplace client initialized successfully.');
 
       // Get application context
       client
-        .query("application.context")
+        .query('application.context')
         .then((res) => {
-          console.log("Success retrieving application.context:", res.data);
+          console.log('Success retrieving application.context:', res.data);
           setAppContext(res.data);
         })
         .catch((error) => {
-          console.error("Error retrieving application.context:", error);
+          console.error('Error retrieving application.context:', error);
         });
     } else if (error) {
-      console.error("Error initializing Marketplace client:", error);
+      console.error('Error initializing Marketplace client:', error);
     }
   }, [client, error, isInitialized]);
 
@@ -870,6 +883,23 @@ const cleanup = () => {
   client.destroy();
   console.log("SDK resources cleaned up");
 };
+```
+
+## Utility Functions
+
+### `objectToJsonArrayBuffer()`
+
+Convert JavaScript objects to JSON ArrayBuffer format (mainly for internal use).
+
+```typescript
+import { objectToJsonArrayBuffer } from "@sitecore-marketplace-sdk/client";
+
+// Convert object to ArrayBuffer
+const data = { name: "example", value: 123 };
+const buffer = objectToJsonArrayBuffer(data);
+
+// This is primarily used internally by the SDK for PostMessage communication
+console.log("Converted to ArrayBuffer:", buffer);
 ```
 
 ### Navigation and UI Integration
@@ -1987,9 +2017,9 @@ const AppProvider = ({ children }) => {
 
     // Initialize app state
     Promise.all([
-      client.query("application.context"),
-      client.query("host.user"),
-      client.query("host.state", { subscribe: true }),
+      client.query('application.context'),
+      client.query('host.user'),
+      client.query('host.state', { subscribe: true }),
     ]).then(([context, user, hostState]) => {
       setAppState({
         context: context.data,
@@ -1999,11 +2029,7 @@ const AppProvider = ({ children }) => {
     });
   }, [client, isInitialized]);
 
-  return (
-    <AppContext.Provider value={{ client, appState }}>
-      {children}
-    </AppContext.Provider>
-  );
+  return <AppContext.Provider value={{ client, appState }}>{children}</AppContext.Provider>;
 };
 ```
 
